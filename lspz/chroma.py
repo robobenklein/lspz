@@ -1,6 +1,7 @@
 
 import sys
 from pathlib import Path
+import math
 
 import matplotlib.pyplot as plt
 from scipy import signal
@@ -23,7 +24,7 @@ def generate_chroma_from_chunk(chunk, sample_rate=default_sr):
     """Generates a spectrogram from audio data
 
     chunk: 1-d array of samples
-    sample_rate:
+    sample_rate: samples/sec
     """
     # frequencies, times, spectrogram = signal.spectrogram(chunk, sample_rate)
 
@@ -48,16 +49,21 @@ if __name__ == '__main__':
 
     print(f"number of chunks in input file: {nchunks}")
 
-    for chunk in chunk_iter(samples, chunk_sample_count):
+    fig, ax = plt.subplots(math.ceil(nchunks))
+
+    for chunkidx, chunk in enumerate(chunk_iter(samples, chunk_sample_count)):
         spectrogram = generate_chroma_from_chunk(chunk, sample_rate)
 
         print(f"spectrogram shape: {spectrogram.shape}")
 
         S_db = librosa.amplitude_to_db(np.abs(spectrogram), ref=np.max)
 
-        plt.figure()
-        librosa.display.specshow(S_db)
-        plt.colorbar()
+        img = librosa.display.specshow(S_db, ax=ax[chunkidx])
+        fig.colorbar(img, ax=ax[chunkidx])
+
+        # plt.figure()
+        # librosa.display.specshow(S_db)
+        # plt.colorbar()
 
     plt.show()
 
