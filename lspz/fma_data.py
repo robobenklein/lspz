@@ -114,8 +114,8 @@ class FMAData():
         return tg
 
     def genres_for_track(self, track_id: int):
-        genres = self.tracks.loc[20]['track']['genres']
-        return map(self.genre_name_from_id, genres)
+        """Returns numpy array: Multi-Hot according to track's genres in list order"""
+        return self.track_genres_labels.loc[track_id].to_numpy()
 
     @functools.cache
     def files_in(self, subset: str):
@@ -130,6 +130,7 @@ class FMAData():
         files.sort()
         return files
 
+    @functools.cache
     def genre_id_from_name(d, name: str):
         return d.genres.index[d.genres['title'] == name].item()
 
