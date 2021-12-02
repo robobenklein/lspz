@@ -23,12 +23,14 @@ def create_model_type_A():
     # trying to prevent overfitting
     x = layers.GaussianNoise(0.02)(x)
     x = layers.Conv2D(
-        32, (3, 3), activation="sigmoid",
+        32, (6, 6), activation="sigmoid",
     )(x)
-    x = layers.MaxPooling2D(pool_size=(3, 3))(x)
-    x = layers.Conv2D(filters=32, kernel_size=(3, 3), activation="relu")(x)
-    x = layers.MaxPooling2D(pool_size=(3, 3))(x)
-    x = layers.Dense(window_count, activation="relu")(x)
+    x = layers.MaxPooling2D(pool_size=(5, 5))(x)
+    x = layers.Conv2D(filters=4, kernel_size=(5, 5), activation="relu")(x)
+    x = layers.MaxPooling2D(pool_size=(20, 20))(x)
+    x = layers.Dense(num_classes, activation="relu")(x)
+
+    x = layers.Flatten()(x)
 
     outputs = layers.Dense(num_classes, activation="softplus")(x)
 
@@ -43,3 +45,5 @@ if __name__ == '__main__':
     m_A.summary()
     m_A.compile(optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
         loss=keras.losses.CategoricalCrossentropy())
+
+    print(f"Model output shape: {m_A.output_shape}")
