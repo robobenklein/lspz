@@ -2,13 +2,18 @@
 import sys
 from pathlib import Path
 import math
+import warnings
 
 import matplotlib.pyplot as plt
-from scipy import signal
-from scipy.io import wavfile
-import librosa
+import audioread
 import librosa.display
 import numpy as np
+import scipy.misc
+import imageio
+import librosa
+from librosa.core import audio as lr_audio
+from scipy import signal
+from scipy.io import wavfile
 
 from .utils import chunk_iter
 
@@ -31,13 +36,21 @@ def generate_chroma_from_chunk(chunk, sample_rate=default_sr):
     if chunk.shape[0] != chunk_sample_count:
         raise RuntimeWarning(f"input chunk does not match target chunk size: {chunk.shape} vs expected {chunk_sample_count}")
 
-    stft = librosa.stft(chunk, n_fft=window_fft_length, dtype=np.float32)
+    stft = librosa.stft(chunk, n_fft=window_fft_length)
     S_db = librosa.amplitude_to_db(np.abs(stft), ref=np.max)
 
     return S_db
 
 def generate_chromas_from_file(infile: Path, exclude_partial=True):
-    samples, sample_rate = librosa.load(infile, sr=default_sr)
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', 'PySoundFile failed. Trying audioread instead.')
+        # samples, sample_rate = librosa.load(infile, sr=default_sr)
+        y, sr_native = lr_audio.__audioread_load(
+            infile, 0.0, None, np.float32)
+        y = lr_audio.to_mono(y)
+        y = lr_audio.resample(y, sr_native, default_sr)
+        samples = y
+        sample_rate = default_sr
 
     samples = np.trim_zeros(samples)
 
@@ -65,12 +78,15 @@ if __name__ == '__main__':
     #
     # print(f"number of chunks in input file: {nchunks}")
 
+    chroma_dir = Path("data/chroma_imgs")
+    chroma_dir.mkdir(parents=True, exist_ok=True)
+
     chromas = list(generate_chromas_from_file(infile))
     fig, ax = plt.subplots(len(chromas))
     print(f"full chromas from file: {len(chromas)}")
 
     for idx, chroma in enumerate(chromas):
-
+        imageio.imwrite(chroma_dir / f"{infile.name}.chroma.{idx}.png", chroma)
         img = librosa.display.specshow(chroma, ax=ax[idx])
         fig.colorbar(img, ax=ax[idx])
 

@@ -8,7 +8,7 @@ from .chroma import window_count, chunk_sample_count
 from .fma_data import data as fmadata
 from . import tf_data
 
-input_dimensions = (1025, 1025, 1)
+image2d_dimensions = (1025, 1025, 1)
 # output_dimensions =
 num_classes = fmadata.genres.index.size
 
@@ -17,12 +17,13 @@ def create_model_type_A():
     """The first model attempt..."""
     print(f"LSPZ constructing model type A")
     # NOTE hardcode: shape of output for 22050/2048/256
-    inputs = keras.Input(shape=input_dimensions)
+    inputs = keras.Input(shape=tf_data.chroma_dimensions)
 
     # scaling from chroma's dB (0 to -80)
     x = layers.Rescaling(1/16, offset=5)(inputs)
     # trying to prevent overfitting
     x = layers.GaussianNoise(0.02)(x)
+    x = layers.Reshape(image2d_dimensions)(x)
     x = layers.Conv2D(
         1, 7, #activation="sigmoid",
         # data_format="channels_last",
@@ -53,6 +54,24 @@ if __name__ == '__main__':
 
     model = m_A
 
+    train_batch_size = 16
+    ds = tf_data.train_dataset.batch(train_batch_size)
+    ds = ds.prefetch(train_batch_size * 4)
+    val_dataset = tf_data.test_dataset.batch(train_batch_size // 4)
+    val_dataset = val_dataset.prefetch(train_batch_size)
+
+    callbacks = [
+        keras.callbacks.ModelCheckpoint(
+            filepath='data/model/model_{epoch}',
+            save_freq='epoch'
+        ),
+        keras.callbacks.TensorBoard(log_dir='./data/logs'),
+    ]
+
     history = model.fit(
-        tf_data.train_dataset, epochs=10
+        ds, epochs=10, validation_data=val_dataset, callbacks=callbacks,
     )
+
+    loss, acc = model.evaluate(val_dataset)  # returns loss and metrics
+    print("loss: %.2f" % loss)
+    print("acc: %.2f" % acc)

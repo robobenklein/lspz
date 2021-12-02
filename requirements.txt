@@ -5,7 +5,9 @@ mutagen
 pandas
 pyacoustid
 pydub
-SoundFile
 librosa
 matplotlib
 tensorflow
+soundfile
+imageio
+pebble
