@@ -28,12 +28,10 @@ def generate_chroma_from_chunk(chunk, sample_rate=default_sr):
     """
     # frequencies, times, spectrogram = signal.spectrogram(chunk, sample_rate)
 
-    spectrogram = librosa.stft(chunk)
+    stft = librosa.stft(chunk, n_fft=window_fft_length, dtype=np.float32)
+    S_db = librosa.amplitude_to_db(np.abs(stft), ref=np.max)
 
-    # print(f"generate_chroma_from_chunk: spectrogram:")
-    # print(spectrogram)
-
-    return spectrogram
+    return S_db
 
 if __name__ == '__main__':
     infile = Path(sys.argv[1])
@@ -49,16 +47,17 @@ if __name__ == '__main__':
 
     print(f"number of chunks in input file: {nchunks}")
 
-    fig, ax = plt.subplots(math.ceil(nchunks))
+    fig, ax = plt.subplots(math.floor(nchunks))
 
     for chunkidx, chunk in enumerate(chunk_iter(samples, chunk_sample_count)):
+        if len(chunk) != chunk_sample_count:
+            # ignore incomplete last chunk
+            continue
         spectrogram = generate_chroma_from_chunk(chunk, sample_rate)
 
         print(f"spectrogram shape: {spectrogram.shape}")
 
-        S_db = librosa.amplitude_to_db(np.abs(spectrogram), ref=np.max)
-
-        img = librosa.display.specshow(S_db, ax=ax[chunkidx])
+        img = librosa.display.specshow(spectrogram, ax=ax[chunkidx])
         fig.colorbar(img, ax=ax[chunkidx])
 
         # plt.figure()
