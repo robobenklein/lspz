@@ -28,37 +28,53 @@ def generate_chroma_from_chunk(chunk, sample_rate=default_sr):
     """
     # frequencies, times, spectrogram = signal.spectrogram(chunk, sample_rate)
 
+    if chunk.shape[0] != chunk_sample_count:
+        raise RuntimeWarning(f"input chunk does not match target chunk size: {chunk.shape} vs expected {chunk_sample_count}")
+
     stft = librosa.stft(chunk, n_fft=window_fft_length, dtype=np.float32)
     S_db = librosa.amplitude_to_db(np.abs(stft), ref=np.max)
 
     return S_db
 
-if __name__ == '__main__':
-    infile = Path(sys.argv[1])
-
-    # sample_rate, samples = wavfile.read(infile)
+def generate_chromas_from_file(infile: Path, exclude_partial=True):
     samples, sample_rate = librosa.load(infile, sr=default_sr)
 
-    print(f"chunk_time_seconds: {chunk_time_seconds}")
-    print(f"file samples: {samples.shape}")
-    print(f"sample_rate: {sample_rate}")
+    samples = np.trim_zeros(samples)
 
     nchunks = samples.shape[0] / chunk_sample_count
-
-    print(f"number of chunks in input file: {nchunks}")
-
-    fig, ax = plt.subplots(math.floor(nchunks))
 
     for chunkidx, chunk in enumerate(chunk_iter(samples, chunk_sample_count)):
         if len(chunk) != chunk_sample_count:
             # ignore incomplete last chunk
-            continue
+            if exclude_partial:
+                continue
         spectrogram = generate_chroma_from_chunk(chunk, sample_rate)
+        yield spectrogram
 
-        print(f"spectrogram shape: {spectrogram.shape}")
+if __name__ == '__main__':
+    infile = Path(sys.argv[1])
 
-        img = librosa.display.specshow(spectrogram, ax=ax[chunkidx])
-        fig.colorbar(img, ax=ax[chunkidx])
+    # # sample_rate, samples = wavfile.read(infile)
+    # samples, sample_rate = librosa.load(infile, sr=default_sr)
+    #
+    # print(f"chunk_time_seconds: {chunk_time_seconds}")
+    # print(f"file samples: {samples.shape}")
+    # print(f"sample_rate: {sample_rate}")
+    #
+    # nchunks = samples.shape[0] / chunk_sample_count
+    #
+    # print(f"number of chunks in input file: {nchunks}")
+
+    chromas = list(generate_chromas_from_file(infile))
+    fig, ax = plt.subplots(len(chromas))
+    print(f"full chromas from file: {len(chromas)}")
+
+    for idx, chroma in enumerate(chromas):
+        # spectrogram = generate_chroma_from_chunk(chunk, sample_rate)
+        # print(f"spectrogram shape: {spectrogram.shape}")
+
+        img = librosa.display.specshow(chroma, ax=ax[idx])
+        fig.colorbar(img, ax=ax[idx])
 
         # plt.figure()
         # librosa.display.specshow(S_db)
