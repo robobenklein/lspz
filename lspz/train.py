@@ -6,6 +6,7 @@ from tensorflow.keras import layers
 
 from .chroma import window_count, chunk_sample_count
 from .fma_data import data as fmadata
+from . import tf_data
 
 input_dimensions = (1025, 1025, 1)
 # output_dimensions =
@@ -16,18 +17,20 @@ def create_model_type_A():
     """The first model attempt..."""
     print(f"LSPZ constructing model type A")
     # NOTE hardcode: shape of output for 22050/2048/256
-    inputs = keras.Input(input_dimensions)
+    inputs = keras.Input(shape=input_dimensions)
 
     # scaling from chroma's dB (0 to -80)
     x = layers.Rescaling(1/16, offset=5)(inputs)
     # trying to prevent overfitting
     x = layers.GaussianNoise(0.02)(x)
     x = layers.Conv2D(
-        32, (6, 6), activation="sigmoid",
+        1, 7, #activation="sigmoid",
+        # data_format="channels_last",
     )(x)
-    x = layers.MaxPooling2D(pool_size=(5, 5))(x)
-    x = layers.Conv2D(filters=4, kernel_size=(5, 5), activation="relu")(x)
-    x = layers.MaxPooling2D(pool_size=(20, 20))(x)
+    # x = layers.MaxPooling2D(pool_size=(5, 5))(x)
+    # x = layers.Conv2D(filters=32, kernel_size=(5, 5), activation="relu")(x)
+    # x = layers.MaxPooling2D(pool_size=(20, 20))(x)
+    x = layers.MaxPooling2D(pool_size=(100, 100))(x)
     x = layers.Dense(num_classes, activation="relu")(x)
 
     x = layers.Flatten()(x)
@@ -47,3 +50,9 @@ if __name__ == '__main__':
         loss=keras.losses.CategoricalCrossentropy())
 
     print(f"Model output shape: {m_A.output_shape}")
+
+    model = m_A
+
+    history = model.fit(
+        tf_data.train_dataset, epochs=10
+    )

@@ -113,7 +113,7 @@ class FMAData():
         tg = tg[d.genre_name_list]
         return tg
 
-    def genres_for_track(self, track_id: int):
+    def get_genres_for_track(self, track_id: int):
         """Returns numpy array: Multi-Hot according to track's genres in list order"""
         return self.track_genres_labels.loc[track_id].to_numpy()
 
