@@ -70,21 +70,8 @@ if __name__ == '__main__':
     print(f"full chromas from file: {len(chromas)}")
 
     for idx, chroma in enumerate(chromas):
-        # spectrogram = generate_chroma_from_chunk(chunk, sample_rate)
-        # print(f"spectrogram shape: {spectrogram.shape}")
-        # print(chroma)
-        # chroma = (chroma[:] + 80) / 16
 
         img = librosa.display.specshow(chroma, ax=ax[idx])
         fig.colorbar(img, ax=ax[idx])
 
-        # plt.figure()
-        # librosa.display.specshow(S_db)
-        # plt.colorbar()
-
     plt.show()
-
-    # plt.pcolormesh(times, frequencies, np.log(spectrogram))
-    # # plt.imshow(spectrogram)
-    # plt.ylabel('Frequency [Hz]')
-    # plt.xlabel('Time [sec]')
