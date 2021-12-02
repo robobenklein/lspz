@@ -72,6 +72,8 @@ if __name__ == '__main__':
     for idx, chroma in enumerate(chromas):
         # spectrogram = generate_chroma_from_chunk(chunk, sample_rate)
         # print(f"spectrogram shape: {spectrogram.shape}")
+        # print(chroma)
+        # chroma = (chroma[:] + 80) / 16
 
         img = librosa.display.specshow(chroma, ax=ax[idx])
         fig.colorbar(img, ax=ax[idx])

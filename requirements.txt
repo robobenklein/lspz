@@ -8,3 +8,4 @@ pydub
 SoundFile
 librosa
 matplotlib
+tensorflow
