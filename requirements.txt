@@ -1,0 +1,10 @@
+requests>=2.23.0
+tenacity>=6.1.0
+coloredlogs>=15.0.1
+mutagen
+pandas
+pyacoustid
+pydub
+SoundFile
+librosa
+matplotlib
