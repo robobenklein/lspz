@@ -76,6 +76,16 @@ class FMAData():
         return load(self.base_path / fma_metadata_dir / "genres.csv")
 
     @functools.cached_property
+    def genre_id_list(self) -> list:
+        """Bare python list of genre IDs"""
+        return self.genres['title'].index.tolist()
+
+    @functools.cached_property
+    def genre_name_list(self):
+        """Bare python list of genre names"""
+        return [self.genre_name_from_id(i) for i in self.genre_id_list]
+
+    @functools.cached_property
     def tracks_with_genre_top(d):
         return d.tracks[d.tracks['track']['genre_top'].notna()]
 
@@ -96,7 +106,12 @@ class FMAData():
             return nd
         cc = d.tracks_with_genres['track']['genres'].apply(collections.Counter)
         tg = cc.apply(f_g)
-        return tg.apply(pd.Series).fillna(0)
+        tg = tg.apply(pd.Series).fillna(0.0)
+        for gn in d.genre_name_list:
+            if gn not in tg.columns:
+                tg[gn] = 0.0
+        tg = tg[d.genre_name_list]
+        return tg
 
     def genres_for_track(self, track_id: int):
         genres = self.tracks.loc[20]['track']['genres']
@@ -133,5 +148,7 @@ if __name__ == '__main__':
     print(metadata.genres)
     print(f"Tracks:")
     print(metadata.tracks)
+    print(f"Ordered Genres:")
+    print(metadata.genre_name_list)
     print(f"Tracks with Genres:")
     print(metadata.track_genres_labels)
