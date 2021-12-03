@@ -41,6 +41,10 @@ def predict_genres(model, file: Path, plotstuff=False):
         else:
             total_preds = prediction
 
+    if total_preds is None:
+        print(f"No predictions returned for {file}")
+        return []
+
     preds = (total_preds / len(chromas)).tolist()[0]
     # print(preds)
     genre_scores = dict(zip(genre_names, preds))
@@ -101,12 +105,13 @@ if __name__ == '__main__':
     for file in args.files:
         try:
             output_genres = predict_genres(model, file, args.plot)
-            print(f"{file.name}: {output_genres}")
             if args.write and output_genres:
                 mf = MediaFile(str(file))
                 mf.genre = output_genres[0]
                 mf.save()
-                print(f"METADATA WRITTEN: {file}")
+                print(f"METADATA WRITTEN: {file} ({output_genres[0]})")
+            else:
+                print(f"{file.name}: {output_genres}")
         except audioread.exceptions.NoBackendError as e:
             print(f"FAILED: {file.name} ({type(e)})")
             continue
