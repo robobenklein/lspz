@@ -25,13 +25,43 @@ def create_model_type_A():
     x = layers.GaussianNoise(0.02)(x)
     x = layers.Reshape(image2d_dimensions)(x)
     x = layers.Conv2D(
-        1, 7, #activation="sigmoid",
-        # data_format="channels_last",
+        1, 26, activation="sigmoid",
+        data_format="channels_last",
+    )(x)
+    x = layers.MaxPooling2D(pool_size=(5, 5))(x)
+    x = layers.Conv2D(filters=32, kernel_size=5, activation="relu")(x)
+    x = layers.MaxPooling2D(pool_size=(20, 20))(x)
+    # x = layers.MaxPooling2D(pool_size=(100, 100))(x)
+    x = layers.Dense(num_classes, activation="relu")(x)
+
+    x = layers.Flatten()(x)
+
+    outputs = layers.Dense(num_classes, activation="softplus")(x)
+
+    model = keras.Model(inputs=inputs, outputs=outputs)
+
+    return model
+
+def create_model_type_B():
+    """The second model attempt..."""
+    print(f"LSPZ constructing model type B")
+    # NOTE hardcode: shape of output for 22050/2048/256
+    inputs = keras.Input(shape=tf_data.chroma_dimensions)
+
+    # scaling from chroma's dB (0 to -80)
+    x = layers.Rescaling(1/16, offset=5)(inputs)
+    # trying to prevent overfitting
+    x = layers.GaussianNoise(0.02)(x)
+    x = layers.Reshape(image2d_dimensions)(x)
+
+    x = layers.Conv2D(
+        1, 26, activation="sigmoid",
+        data_format="channels_last",
     )(x)
     # x = layers.MaxPooling2D(pool_size=(5, 5))(x)
-    # x = layers.Conv2D(filters=32, kernel_size=(5, 5), activation="relu")(x)
+    # x = layers.Conv2D(filters=32, kernel_size=5, activation="relu")(x)
     # x = layers.MaxPooling2D(pool_size=(20, 20))(x)
-    x = layers.MaxPooling2D(pool_size=(100, 100))(x)
+    x = layers.MaxPooling2D(pool_size=(10, 10))(x)
     x = layers.Dense(num_classes, activation="relu")(x)
 
     x = layers.Flatten()(x)
@@ -45,14 +75,12 @@ def create_model_type_A():
 if __name__ == '__main__':
     print(f"")
 
-    m_A = create_model_type_A()
-    m_A.summary()
-    m_A.compile(optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
+    model = create_model_type_B()
+    model.summary()
+    model.compile(optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
         loss=keras.losses.CategoricalCrossentropy())
 
-    print(f"Model output shape: {m_A.output_shape}")
-
-    model = m_A
+    print(f"Model output shape: {model.output_shape}")
 
     train_batch_size = 16
     ds = tf_data.train_dataset.batch(train_batch_size)

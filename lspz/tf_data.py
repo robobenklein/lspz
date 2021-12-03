@@ -26,43 +26,38 @@ def subset_tracks_with_genres(subset = "small"):
         if trackid in fmadata.track_genres_labels.index:
             yield TrackOnDisk(trackid, trackfile)
 
-# def track_first_chroma_labels_pair(tod):
-#     if isinstance(tod, TrackOnDisk):
-#         trackid, trackfile = tod
-#     else:
-#         tod = tod.numpy()
-#         trackid = tod[0].item()
-#         trackfile = Path(tod[1].item())
+def track_has_genres(path):
+    trackfile = Path(path.numpy().decode())
+    trackid = int(str(trackfile.name).split('.')[0])
+    return trackid in fmadata.track_genres_labels.index
+
+# def tf_track_data_pair(path):
+#     trackfile = Path(path.numpy().decode())
+#     trackid = int(trackfile.stem)
 #     labels = fmadata.get_genres_for_track(trackid)
 #     for chroma in generate_chromas_from_file(trackfile):
 #         return (chroma, labels)
 
-# def gen_chromas_with_labels(subset = "small"):
-#     """Generator: (input, labels) for tf.data.Dataset
-#
-#     input: the chroma for the chunk
-#     labels: the numpy MultiHot array for genres of the track the chunk is from
-#     """
-#     target_tracks = list(subset_tracks_with_genres(subset))
-#     random.Random(random_number).shuffle(target_tracks)
-#     for trackid, trackfile in target_tracks:
-#         labels = fmadata.get_genres_for_track(trackid)
-#         for chroma in generate_chromas_from_file(trackfile):
-#             yield (chroma, labels)
-
-def tf_track_data_pair(path):
+def tf_pair_from_npz(path):
     trackfile = Path(path.numpy().decode())
-    trackid = int(trackfile.stem)
+    trackid = int(str(trackfile.name).split('.')[0])
     labels = fmadata.get_genres_for_track(trackid)
-    for chroma in generate_chromas_from_file(trackfile):
+    for chroma in np.load(trackfile).values():
         return (chroma, labels)
 
-files_list = list([str(x.path) for x in subset_tracks_with_genres("small")])
-files_ds = tf.data.Dataset.from_tensor_slices(tf.constant(files_list))
-files_ds.shuffle(len(files_list))
+# files_list = list([str(x.path) for x in subset_tracks_with_genres("small")])
+files_list = tf.data.Dataset.list_files(
+    str(fmadata.base_path / f"lspz_chromas_small") + "/*/*.chroma.npz",
+    seed=42, name="lspz_npz_chromas",
+)
+
+files_ds = files_list.filter(
+    # lambda x: track_has_genres(int(str(Path(x.numpy().decode()).name).split('.')[0])),
+    lambda x: tf.py_function(track_has_genres, [x,], (tf.bool), name="track_has_genres"),
+)
 
 dataset = files_ds.map(
-    lambda x: tf.py_function(tf_track_data_pair, [x,], (tf.float32, tf.float32)),
+    lambda x: tf.py_function(tf_pair_from_npz, [x,], (tf.float32, tf.float32), name="tf_pair_from_npz"),
     num_parallel_calls=tf.data.AUTOTUNE,
 )
 
@@ -90,9 +85,11 @@ train_dataset = dataset.enumerate() \
 
 if __name__ == "__main__":
 
-    if len(sys.argv) > 1:
-        targetfile = tf.constant(sys.argv[1].encode())
-        print(tf_track_data_pair(targetfile))
+    # if len(sys.argv) > 1:
+    #     targetfile = tf.constant(sys.argv[1].encode())
+    #     print(tf_track_data_pair(targetfile))
 
-    print(f"{len(files_list)} files loaded as dataset sources")
+    print(f"{files_list.cardinality()} chroma files")
+    print(f"{dataset.cardinality()} entries in dataset")
+    print(f"first entry:")
     print(next(iter(train_dataset)))

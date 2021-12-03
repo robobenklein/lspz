@@ -115,6 +115,10 @@ class FMAData():
 
     def get_genres_for_track(self, track_id: int):
         """Returns numpy array: Multi-Hot according to track's genres in list order"""
+        if not isinstance(track_id, int):
+            raise TypeError(f"track_id must be type int")
+        if track_id not in self.track_genres_labels.index:
+            raise KeyError(f"track_id '{track_id}' was not found in the track genres labels")
         return self.track_genres_labels.loc[track_id].to_numpy()
 
     @functools.cache
