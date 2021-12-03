@@ -13,3 +13,4 @@ imageio
 pebble
 pyyaml
 h5py
+mediafile
