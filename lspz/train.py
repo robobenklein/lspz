@@ -72,13 +72,52 @@ def create_model_type_B():
 
     return model
 
+def create_model_type_C():
+    """The third model attempt..."""
+    print(f"LSPZ constructing model type C")
+    # NOTE hardcode: shape of output for 22050/2048/256
+    inputs = keras.Input(shape=tf_data.chroma_dimensions)
+
+    # scaling from chroma's dB (0 to -80)
+    x = layers.Rescaling(1/16, offset=5)(inputs)
+    # trying to prevent overfitting
+    x = layers.GaussianNoise(0.005)(x)
+    x = layers.Reshape(image2d_dimensions)(x)
+
+    x = layers.Conv2D(
+        1, 26, activation="sigmoid",
+        data_format="channels_last",
+    )(x)
+    x = layers.MaxPooling2D(pool_size=(5, 5))(x)
+    x = layers.Conv2D(filters=32, kernel_size=6, activation="relu")(x)
+    # x = layers.MaxPooling2D(pool_size=(20, 20))(x)
+    x = layers.MaxPooling2D(pool_size=(5, 5))(x)
+    x = layers.Dense(num_classes, activation="relu")(x)
+
+    x = layers.Flatten()(x)
+
+    outputs = layers.Dense(num_classes, activation="sigmoid")(x)
+
+    model = keras.Model(inputs=inputs, outputs=outputs)
+
+    return model
+
 if __name__ == '__main__':
     print(f"")
 
-    model = create_model_type_B()
+    model = create_model_type_C()
     model.summary()
-    model.compile(optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
-        loss=keras.losses.CategoricalCrossentropy())
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+        loss=keras.losses.CategoricalCrossentropy(),
+        metrics=[
+            "binary_accuracy",
+            "binary_crossentropy",
+            "mae",
+            keras.metrics.Precision(),
+            keras.metrics.Recall(),
+        ],
+    )
 
     print(f"Model output shape: {model.output_shape}")
 
