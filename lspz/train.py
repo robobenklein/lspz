@@ -58,10 +58,10 @@ def create_model_type_B():
         1, 26, activation="sigmoid",
         data_format="channels_last",
     )(x)
-    # x = layers.MaxPooling2D(pool_size=(5, 5))(x)
-    # x = layers.Conv2D(filters=32, kernel_size=5, activation="relu")(x)
+    x = layers.MaxPooling2D(pool_size=(5, 5))(x)
+    x = layers.Conv2D(filters=32, kernel_size=6, activation="relu")(x)
     # x = layers.MaxPooling2D(pool_size=(20, 20))(x)
-    x = layers.MaxPooling2D(pool_size=(10, 10))(x)
+    x = layers.MaxPooling2D(pool_size=(5, 5))(x)
     x = layers.Dense(num_classes, activation="relu")(x)
 
     x = layers.Flatten()(x)
