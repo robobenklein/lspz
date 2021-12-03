@@ -46,7 +46,7 @@ def generate_chromas_from_file(infile: Path, exclude_partial=True):
         warnings.filterwarnings('ignore', 'PySoundFile failed. Trying audioread instead.')
         # samples, sample_rate = librosa.load(infile, sr=default_sr)
         y, sr_native = lr_audio.__audioread_load(
-            infile, 0.0, None, np.float32)
+            str(infile), 0.0, None, np.float32)
         y = lr_audio.to_mono(y)
         y = lr_audio.resample(y, sr_native, default_sr)
         samples = y
