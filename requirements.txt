@@ -11,3 +11,5 @@ tensorflow
 soundfile
 imageio
 pebble
+pyyaml
+h5py
