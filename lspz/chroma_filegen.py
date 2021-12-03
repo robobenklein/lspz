@@ -92,7 +92,6 @@ if __name__ == '__main__':
                     write_chromas_for_file,
                     args=(trackfile, chroma_dir),
                     kwargs={"skip_if_exists": not args.overwrite},
-                    timeout=120,
                 )
             )
 
