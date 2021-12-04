@@ -2,6 +2,7 @@
 import sys
 import argparse
 from pathlib import Path
+import pprint
 
 import numpy as np
 import tensorflow as tf
@@ -13,7 +14,7 @@ import audioread
 
 from .chroma import generate_chromas_from_file
 from .fma_data import data as fmadata
-# from . import tf_data
+from . import tf_data
 
 image2d_dimensions = (1025, 1025, 1)
 # output_dimensions =
@@ -23,7 +24,18 @@ genre_names = list(fmadata.genre_name_list)
 
 def load_model_from_path(path: Path):
     """Load'n up"""
-    return tf.keras.models.load_model(str(path))
+    model = tf.keras.models.load_model(str(path), compile=False)
+    model.compile(
+        metrics=[
+            "binary_accuracy",
+            "binary_crossentropy",
+            "mae",
+            keras.metrics.Precision(),
+            keras.metrics.Recall(),
+        ],
+        # metrics=["accuracy", "precision", "truenegatives", "truepositives"],
+    )
+    return model
 
 def predict_genres(model, file: Path, plotstuff=False):
     # print(f"Getting chromas from file...")
@@ -33,8 +45,7 @@ def predict_genres(model, file: Path, plotstuff=False):
     total_preds = None
     for idx, chroma in enumerate(chromas):
         chroma = np.expand_dims(chroma, axis=0)
-        if plotstuff:
-            print(f"Predicting chroma {idx+1}/{len(chromas)} ...")
+        # print(f"Predicting chroma {idx+1}/{len(chromas)} ...")
         prediction = model.predict(chroma)
 
         if total_preds is not None:
@@ -46,16 +57,13 @@ def predict_genres(model, file: Path, plotstuff=False):
         print(f"No predictions returned for {file}")
         return []
 
-    # preds = (total_preds / len(chromas)).tolist()[0]
-    preds = total_preds.tolist()[0]
+    preds = (total_preds / len(chromas)).tolist()[0]
     # print(preds)
     genre_scores = dict(zip(genre_names, preds))
     top_genres = {k: v for k, v in sorted(genre_scores.items(), key=lambda item: item[1], reverse=True)[:10]}
+    # print(top_genres)
 
-    if plotstuff:
-        print(top_genres)
-
-    # genre_scores_unordered = [v for v in genre_scores.values()]
+    genre_scores_unordered = [v for v in genre_scores.values()]
     # breaks = jenkspy.jenks_breaks(genre_scores_unordered, nb_class=50)
     # # print(f"breaks: {breaks}")
     # cutoff = breaks[-2]
@@ -69,7 +77,6 @@ def predict_genres(model, file: Path, plotstuff=False):
         plt.bar(*zip(
             *top_genres.items()
         ))
-        plt.xticks(rotation=20, ha="right")
         plt.show()
 
     return output_genres_names
@@ -80,12 +87,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "-p", "--plot",
         action="store_true",
-        help="Show a plot of the top genres for a track",
-    )
-    parser.add_argument(
-        "-w", "--write",
-        action="store_true",
-        help="Write the top genre to the audio file metadata",
+        help="Show a plot of the model's scores",
     )
     parser.add_argument(
         'model',
@@ -97,26 +99,17 @@ if __name__ == '__main__':
         type=Path,
         help="Audio files to run model across",
         # action="append",
-        nargs="+",
+        nargs="*",
     )
 
     args = parser.parse_args()
 
     model = load_model_from_path(args.model)
-    # model.summary()
+    model.summary()
+    print(f"Model output shape: {model.output_shape}")
 
-    # print(f"Model output shape: {model.output_shape}")
+    test_dataset = tf_data.test_dataset.batch(4)
+    metrics = model.evaluate(test_dataset, return_dict=True)
 
-    for file in args.files:
-        try:
-            output_genres = predict_genres(model, file, args.plot)
-            if args.write and output_genres:
-                mf = MediaFile(str(file))
-                mf.genre = output_genres[0]
-                mf.save()
-                print(f"METADATA WRITTEN: {file} ({output_genres[0]})")
-            else:
-                print(f"{file.name}: {output_genres}")
-        except audioread.exceptions.NoBackendError as e:
-            print(f"FAILED: {file.name} ({type(e)})")
-            continue
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(metrics)

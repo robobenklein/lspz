@@ -1,4 +1,6 @@
 
+import pprint
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -139,6 +141,8 @@ if __name__ == '__main__':
         ds, epochs=10, validation_data=val_dataset, callbacks=callbacks,
     )
 
-    loss, acc = model.evaluate(val_dataset)  # returns loss and metrics
-    print("loss: %.2f" % loss)
-    print("acc: %.2f" % acc)
+    metrics = model.evaluate(val_dataset)  # returns loss and metrics
+    # print("loss: %.2f" % loss)
+    # print("acc: %.2f" % acc)
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(metrics)
