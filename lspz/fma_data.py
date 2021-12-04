@@ -142,6 +142,13 @@ class FMAData():
     def genre_name_from_id(self, id: int):
         return self.genres.loc[id]['title']
 
+    @functools.cache
+    def genre_toplevel_id(self, genre):
+        if isinstance(genre, str):
+            genre = self.genre_id_from_name(genre)
+        top_level = self.genres.loc[genre]['top_level']
+        return int(top_level)
+
 data = FMAData(Path(os.environ.get("LSPZ_FMA_DATA_DIR", default_fma_data_folder)))
 
 if __name__ == '__main__':
