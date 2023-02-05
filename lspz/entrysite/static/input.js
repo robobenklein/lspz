@@ -5,8 +5,18 @@ class LspzAudioPlayer {
     this.data_url = null;
   }
 
-  load_track(data_url) {
-    this.data_url = data_url;
+  mark_loading() {
+
+  }
+
+  load_track(track_id) {
+    this.track_id = track_id;
+    console.log(`Player is loading track ${track_id}`);
+
+    let el_source = this.element.getElementsByTagName('source')[0];
+    el_source.src = `/api/v1/data/track/${track_id}/file`;
+    this.element.load();
+    if (!this.element.paused) this.element.pause();
   }
 
   /**
@@ -32,9 +42,20 @@ const comparison_adjectives = [
   "slightly",
   "moderately",
   "substantially",
-  "vastly",
+  // "vastly",
   "extremely",
 ];
+
+// Track / Sample A contains ...
+const vocal_amounts = [
+  "no evidence of a voice at all.",
+  "human voice-like sounds, but without any recognizable language.",
+  "recognizably human vocal sounds, but without any use of language. (e.g. vocal stabs)",
+  "human voices, perhaps words, but not substantially.",
+  "recognizable human speech or singing. (in any language)",
+  "clear, recognizable lyrics. (in any language)",
+  "substantial lyrics, which make up the majority of the audio.",
+]
 
 /**
  * set volume across both tracks while applying replaygain difference
@@ -79,6 +100,22 @@ function lspz_loaded (event) {
     input_el.addEventListener("input", upfunc);
     upfunc();
   });
+
+  // finally, start loading the real input:
+  lspz_load_samples();
 }
 
 window.addEventListener("load", lspz_loaded);
+
+function lspz_load_samples() {
+  player_a.mark_loading();
+  player_b.mark_loading();
+
+  jQuery.get("/api/v1/random/tracks/2", (data) => {
+    let trackid_a = data[0];
+    let trackid_b = data[1];
+
+    player_a.load_track(trackid_a);
+    player_b.load_track(trackid_b);
+  });
+}
