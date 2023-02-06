@@ -20,6 +20,7 @@ class MusicLibrary():
     - MusicBrainz release/album id
     - Artist name and MBID
     - Chromaprint / AcoustID
+    - Track replay gain (so perceived volume is normalized across samples)
     """
     track_id_tag = "MUSICBRAINZ_TRACKID"
 
@@ -45,8 +46,12 @@ class MusicLibrary():
             else:
                 log.debug(f"File does not have a track MBID {path}")
 
+    @functools.cache
     def scan_library(self):
-        return self.get_supported_file_paths()
+        return list(self.get_supported_file_paths())
+
+    def get_mutagen_file(self, mbid):
+        return mutagen.File(self.get_trackondisk_by_mbid(mbid).path)
 
     @functools.cache
     def get_trackondisk_by_mbid(self, mbid):

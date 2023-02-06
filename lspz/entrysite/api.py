@@ -20,10 +20,38 @@ re_range_header = r'(?P<unit>\w+)=(?P<start>\d+)-(?P<end>\d*)'
 library = MusicLibrary(f"/home/robo/Music/music")
 
 
+### dataset routes:
+
 @bp.route("/data/tracks")
 def list_tracks():
     return {
         x.mbid: str(x.path) for x in library.scan_library()
+    }
+
+@bp.route("/data/submit-comparison", methods=['POST'])
+def post_new_comparison():
+    with log.verbose_logger():
+        log.debug(request.headers)
+        log.debug(request.form)
+
+    participant = request.headers.get('X-Authentik-Username', 'LSPZ_NOT_AN_AUTHENTIK_USER')
+    log.info(f"Submission from {participant}")
+    # store the data we get from humans
+    return {"status": "recorded"}
+
+### track routes:
+
+@bp.route("/track/<mbid>.html")
+def track_details_template(mbid: str):
+    mf = library.get_mutagen_file(mbid)
+    return render_template('trackdetails.html', data={**mf.tags})
+
+@bp.route("/track/<mbid>/gain")
+def get_track_gain(mbid: str):
+    mf = library.get_mutagen_file(mbid)
+    return {
+        "track": float(mf.tags['replaygain_track_gain'][0].split()[0]),
+        "reference": float(mf.tags['replaygain_reference_loudness'][0].split()[0]),
     }
 
 @bp.route("/random/tracks/<num>")
@@ -34,7 +62,7 @@ def random_track_id(num: int):
         num
     )
 
-@bp.route("/data/track/<mbid>/file", methods=['GET'])
+@bp.route("/track/<mbid>/file", methods=['GET'])
 def get_track_by_mbid(mbid: str):
     """Segments a file for HTTP partial-content"""
 
