@@ -55,7 +55,44 @@ class LspzAudioPlayer {
   }
 }
 
+class LspzAudioSettings {
+  constructor() {
+    this.functions = {};
+  }
+
+  registerSetting(name, defaultval) {
+    if (localStorage.getItem(name) === null) {
+      localStorage.setItem(name, JSON.stringify(defaultval));
+    }
+  }
+
+  /**
+   * set a function to be called with values of a setting
+   * @param {[type]} name      setting key
+   * @param {[type]} function  function(cur_value)
+   */
+  addCallback(name, func, call_now = false) {
+    if (!this.functions[name]) this.functions[name] = [];
+    this.functions[name].push(func);
+    if (call_now) {
+      func(this.getItem(name));
+    }
+  }
+
+  getItem(name) {
+    return JSON.parse(localStorage.getItem(name));
+  }
+
+  setItem(name, value) {
+    localStorage.setItem(name, JSON.stringify(value));
+    if (this.functions[name].length) this.functions[name].forEach(
+      (f) => f(value)
+    );
+  }
+}
+
 var vol_slider;
+var lspz_settings = new LspzAudioSettings();
 var player_a, player_b;
 
 const comparison_adjectives = [
@@ -70,13 +107,14 @@ const comparison_adjectives = [
 
 // Track / Sample A contains ...
 const vocal_amounts = [
+  "...",
   "no evidence of a voice at all.",
-  "human voice-like sounds, but without any recognizable language.",
-  "recognizably human vocal sounds, but without any use of language. (e.g. vocal stabs)",
-  "human voices, perhaps words, but not substantially.",
+  "sounds similar to a human voice.",
+  "recognizably human vocal sounds, but no language.",
+  "human voices, perhaps words, but no lyrics.",
   "recognizable human speech or singing. (in any language)",
   "clear, recognizable lyrics. (in any language)",
-  "substantial lyrics, which make up the majority of the audio.",
+  "substantial or dominant lyrics.",
 ]
 
 /**
@@ -95,7 +133,21 @@ function lspz_loaded (event) {
   player_a = new LspzAudioPlayer('a');
   player_b = new LspzAudioPlayer('b');
 
-  let volume = localStorage.getItem("master_volume");
+  for (let key in init_settings) {
+    let defaultval = init_settings[key];
+    lspz_settings.registerSetting(key, false);
+    let switch_el = document.getElementById(key);
+    switch_el.checked = lspz_settings.getItem(key);
+    console.debug(`Restore ${key} to ${lspz_settings.getItem(key)}`);
+
+    switch_el.addEventListener("click", (e) => {
+      console.log(e, switch_el.checked);
+      lspz_settings.setItem(key, switch_el.checked);
+    });
+  }
+  lspz_settings.registerSetting("master_volume", 50);
+  // let volume = localStorage.getItem("master_volume");
+  let volume = lspz_settings.getItem("master_volume");
 
   if (volume) {
     console.log(`Restore user's volume preference to ${volume}`);
@@ -106,7 +158,7 @@ function lspz_loaded (event) {
   vol_slider.addEventListener("input", (e) => {
     console.debug(`master volume to ${vol_slider.value}`);
     setVolumeLevels(vol_slider.value);
-    localStorage.setItem("master_volume", vol_slider.value);
+    lspz_settings.setItem("master_volume", vol_slider.value);
   });
 
   // pause other track
@@ -131,6 +183,32 @@ function lspz_loaded (event) {
     input_el.addEventListener("input", upfunc);
     upfunc();
   });
+
+  ["a", "b"].forEach(letter => {
+    var input_el = document.getElementById(`input_vocal_${letter}`);
+    var input_detail = document.getElementById(`input_vocal_${letter}_detail`);
+
+    input_el.value = 0;
+    input_el.max = vocal_amounts.length -1;
+
+    let upfunc = () => {
+      let val = input_el.value;
+      let desc = vocal_amounts[val];
+      input_detail.innerHTML = desc;
+    }
+    input_el.addEventListener("input", upfunc);
+    upfunc();
+  });
+
+  lspz_settings.addCallback("show_track_details", (val) => {
+    ["a", "b"].forEach(letter => {
+      if (val) {
+        jQuery(`#collapse-sample-${letter}`).collapse("show");
+      } else {
+        jQuery(`#collapse-sample-${letter}`).collapse("hide");
+      }
+    });
+  }, true);
 
   jQuery("#lspz-data-submission").submit(function (e) {
     e.preventDefault();

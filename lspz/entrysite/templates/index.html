@@ -38,7 +38,7 @@
       {{lspz_track_player('b')}}
     </div>
     <div class="row justify-content-center gx-6">
-      <div class="col-4">
+      <div class="col-3">
         <h3 class="text-center">Controls</h3>
         <div class="input-group">
           <!-- <input type="range" id="volume" name="volume" min="0" max="100"> -->
@@ -46,19 +46,30 @@
           <input type="range" class="form-range" id="master_volume" min="0" max="100">
         </div>
         <div class="input-group lspz-controls">
+          <script>
+            let init_settings = {};
+          </script>
           {% for controlname in [
             ['play_from_track_start', '<strike>Play from start of track instead of start of sample.</strike> Not Implemented'],
             ['stop_at_sample_end', '<strike>Continue playing the track after the sample section.</strike> Not Implemented'],
             ['show_track_details', 'Show track name and details by default.'],
           ] %}
           <div class="form-check form-switch lspz-control">
-            <input class="form-check-input" type="checkbox" role="switch" id="{{controlname[0]}}">
+            <input class="form-check-input" type="checkbox" role="switch" id="{{controlname[0]}}" value="">
             <label class="form-check-label" for="{{controlname[0]}}">{{controlname[1] | safe}}</label>
           </div>
+          <script>
+          init_settings["{{controlname[0]}}"] = false;
+          // let option_{{controlname[0]}}_el = document.getElementById("{{controlname[0]}}");
+          // option_{{controlname[0]}}_el.
+          // window.addEventListener("load", () => {
+          //
+          // });
+          </script>
           {% endfor %}
         </div>
       </div>
-      <div class="col-8">
+      <div class="col-9">
         <h3 class="text-center">Data Input</h3>
         <form action="/api/v1/data/submit-comparison" id="lspz-data-submission">
           <div class="input-group">
@@ -71,7 +82,14 @@
             <input type="range" class="form-range" name="input_synthetic" id="input_synthetic" min="-1" max="1" step="0.1">
             <p>Track/Sample <b>A</b> is <span id="input_synthetic_detail" style="font-weight: bold;">N/A</span> synthetic or electronic compared to <b>B</b>.</p>
           </div>
-
+          <div class="row">
+          {% for letter in ['a', 'b'] %}
+            <div class="col input-group">
+              <input type="range" class="form-range" name="input_vocal_{{letter}}" id="input_vocal_{{letter}}" min="0" max="1" step="1">
+              <p>Track/Sample <b>{{letter|upper}}</b> contains <span id="input_vocal_{{letter}}_detail" style="font-weight: bold;">...</span></p>
+            </div>
+          {% endfor %}
+          </div>
           <div class="input-group" data-bs-theme="dark">
             <input type="text" class="form-control" placeholder="Additional comments, notes, or other information?" aria-label="Comments" data-bs-theme="dark">
             <!-- <button class="btn btn-outline-secondary" type="button">Button</button> -->
