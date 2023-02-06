@@ -85,7 +85,7 @@ class LspzAudioSettings {
 
   setItem(name, value) {
     localStorage.setItem(name, JSON.stringify(value));
-    if (this.functions[name].length) this.functions[name].forEach(
+    if (this.functions[name] && this.functions[name].length) this.functions[name].forEach(
       (f) => f(value)
     );
   }

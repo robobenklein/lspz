@@ -15,14 +15,15 @@ class MusicLibrary():
     This library MUST be properly tagged with metadata, including required:
     - MusicBrainz (MB) track ID (the primary identifier)
     - Title
+    - Track replay gain (so perceived volume is normalized across samples)
 
     We strongly recommend also having:
     - MusicBrainz release/album id
     - Artist name and MBID
     - Chromaprint / AcoustID
-    - Track replay gain (so perceived volume is normalized across samples)
     """
     track_id_tag = "MUSICBRAINZ_TRACKID"
+    track_replaygain_tag = "replaygain_track_gain"
 
     def __init__(self, path: Path):
         if type(path) is not Path:
@@ -41,6 +42,9 @@ class MusicLibrary():
                 length = mf.info.length
                 if length < 31 or length > 3600:
                     log.debug(f"Skip track due to length {path}")
+                    continue
+                if self.track_replaygain_tag not in mf.tags:
+                    log.warn(f"Track has no replaygain, skip: {path}")
                     continue
                 yield TrackOnDisk(trackids[0], path)
             else:

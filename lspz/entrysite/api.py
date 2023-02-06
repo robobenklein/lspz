@@ -20,6 +20,18 @@ re_range_header = r'(?P<unit>\w+)=(?P<start>\d+)-(?P<end>\d*)'
 library = MusicLibrary(f"/home/robo/Music/music")
 
 
+def force_nocache_response(response):
+    response.cache_control.max_age = 0
+    response.cache_control.no_cache = True
+    response.cache_control.no_store = True
+    response.cache_control.must_revalidate = True
+
+@bp.after_request
+def add_cache_control_header(response):
+    if 'Cache-Control' not in response.headers:
+        force_nocache_response(response)
+    return response
+
 ### dataset routes:
 
 @bp.route("/data/tracks")
@@ -85,7 +97,7 @@ def get_track_by_mbid(mbid: str):
 
     with track.path.open('rb') as trackfile:
         chunk, start, length, total_size = get_file_chunk(
-            trackfile, byte1, byte2, maxchunksize=2**21 # ~2MiB
+            trackfile, byte1, byte2, maxchunksize=2**23 # ~8MiB
         )
         file_mime = magic.from_buffer(trackfile.read(2048), mime=True)
 
