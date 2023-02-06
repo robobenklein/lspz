@@ -1,6 +1,7 @@
 
 import re
 import random
+import json
 from pathlib import Path
 
 import magic
@@ -54,6 +55,15 @@ def post_new_comparison():
 
     user_path = data_output_dir / participant
     user_path.mkdir(exist_ok=True)
+
+    flat = request.form.to_dict()
+    submission_dir = user_path / flat['a'] / flat['b']
+    submission_dir.mkdir(parents=True, exist_ok=True)
+
+    file = submission_dir / "submissions.jsonl"
+    with file.open('ta+') as f:
+        f.write(json.dumps(flat))
+        f.write("\n")
 
     # store the data we get from humans
     return {"status": "recorded"}
