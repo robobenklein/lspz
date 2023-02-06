@@ -34,21 +34,21 @@ class MusicLibrary():
         log.info(f"Scanning music library...")
         for path in self._path.glob("**/*.flac"):
             mf = mutagen.File(path)
-            if self.track_id_tag in mf.tags:
-                trackids = mf.tags[self.track_id_tag]
-                if len(trackids) != 1:
-                    log.warn(f"Track has multiple MBIDs: {path}")
-                    continue
-                length = mf.info.length
-                if length < 31 or length > 3600:
-                    log.debug(f"Skip track due to length {path}")
-                    continue
-                if self.track_replaygain_tag not in mf.tags:
-                    log.warn(f"Track has no replaygain, skip: {path}")
-                    continue
-                yield TrackOnDisk(trackids[0], path)
-            else:
+            if self.track_id_tag not in mf.tags:
                 log.debug(f"File does not have a track MBID {path}")
+                continue
+            trackids = mf.tags[self.track_id_tag]
+            if len(trackids) != 1:
+                log.warn(f"Track has multiple MBIDs: {path}")
+                continue
+            length = mf.info.length
+            if length < 31 or length > 3600:
+                log.debug(f"Skip track due to length {path}")
+                continue
+            if self.track_replaygain_tag not in mf.tags:
+                log.warn(f"Track has no replaygain, skip: {path}")
+                continue
+            yield TrackOnDisk(trackids[0], path)
 
     @functools.cache
     def scan_library(self):

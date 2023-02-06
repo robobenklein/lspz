@@ -1,6 +1,7 @@
 
 import re
 import random
+from pathlib import Path
 
 import magic
 from flask import (
@@ -18,6 +19,8 @@ bp = Blueprint('apiv1', __name__, url_prefix='/api/v1')
 re_range_header = r'(?P<unit>\w+)=(?P<start>\d+)-(?P<end>\d*)'
 
 library = MusicLibrary(f"/home/robo/Music/music")
+data_output_dir = Path("data/lspz_site_submissions")
+data_output_dir.mkdir(parents=True, exist_ok=True)
 
 
 def force_nocache_response(response):
@@ -47,7 +50,11 @@ def post_new_comparison():
         log.debug(request.form)
 
     participant = request.headers.get('X-Authentik-Username', 'LSPZ_NOT_AN_AUTHENTIK_USER')
-    log.info(f"Submission from {participant}")
+    log.info(f"Recording submission from {participant} ...")
+
+    user_path = data_output_dir / participant
+    user_path.mkdir(exist_ok=True)
+
     # store the data we get from humans
     return {"status": "recorded"}
 
@@ -56,7 +63,11 @@ def post_new_comparison():
 @bp.route("/track/<mbid>.html")
 def track_details_template(mbid: str):
     mf = library.get_mutagen_file(mbid)
-    return render_template('trackdetails.html', data={**mf.tags})
+    try:
+        return render_template('trackdetails.html', data={**mf.tags})
+    except Exception as e:
+        log.warn({**mf.tags})
+        raise e
 
 @bp.route("/track/<mbid>/gain")
 def get_track_gain(mbid: str):

@@ -91,6 +91,14 @@ class LspzAudioSettings {
   }
 }
 
+function objectifyForm(formArray) {
+  var returnArray = {};
+  for (var i = 0; i < formArray.length; i++){
+    returnArray[formArray[i]['name']] = formArray[i]['value'];
+  }
+  return returnArray;
+}
+
 var vol_slider;
 var lspz_settings = new LspzAudioSettings();
 var player_a, player_b;
@@ -215,20 +223,22 @@ function lspz_loaded (event) {
     jQuery("#lspz-data-submission .btn[type='submit']").html("Submitting...");
     jQuery("#lspz-data-submission .btn[type='submit']").toggleClass(["btn-primary", "btn-outline-primary"]);
 
-    // disable inputs:
-    jQuery("#lspz-data-submission input").prop('disabled', true);
-    jQuery("#lspz-data-submission button[type='submit']").prop('disabled', true);
-
     let form = jQuery(this),
         url = form.attr("action");
 
     let formData = new FormData(document.getElementById("lspz-data-submission"));
     formData.append("a", player_a.track_id);
     formData.append("b", player_b.track_id);
+    // let form_data = objectifyForm(jQuery("#lspz-data-submission").serializeArray());
+    // console.log(form_data);
+
+    // disable inputs: must happen AFTER grabbing form data
+    jQuery("#lspz-data-submission input").prop('disabled', true);
+    jQuery("#lspz-data-submission button[type='submit']").prop('disabled', true);
 
     jQuery.ajax({
       url: url,
-      type: "post",
+      type: "POST",
       data: formData,
       processData: false,
       contentType: false,

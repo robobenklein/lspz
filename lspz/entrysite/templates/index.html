@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LSPZ Data Entry</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+  <link rel="icon" type="image/png" href="https://unhexium.net/images/robobenklein-circle-avatar-shaded-trace-border-512.svg.png" />
 </head>
 
 <body data-bs-theme="dark">
@@ -53,18 +54,15 @@
             ['play_from_track_start', '<strike>Play from start of track instead of start of sample.</strike> Not Implemented'],
             ['stop_at_sample_end', '<strike>Continue playing the track after the sample section.</strike> Not Implemented'],
             ['show_track_details', 'Show track name and details by default.'],
+            ['autoplay_sample_a', '<strike>Start playing sample A on page load.</strike> Not Implemented'],
+            ['autoplay_sample_b', '<strike>Start playing sample B after A finishes.</strike> Not Implemented'],
           ] %}
           <div class="form-check form-switch lspz-control">
             <input class="form-check-input" type="checkbox" role="switch" id="{{controlname[0]}}" value="">
             <label class="form-check-label" for="{{controlname[0]}}">{{controlname[1] | safe}}</label>
           </div>
           <script>
-          init_settings["{{controlname[0]}}"] = false;
-          // let option_{{controlname[0]}}_el = document.getElementById("{{controlname[0]}}");
-          // option_{{controlname[0]}}_el.
-          // window.addEventListener("load", () => {
-          //
-          // });
+            init_settings["{{controlname[0]}}"] = false;
           </script>
           {% endfor %}
         </div>
@@ -83,15 +81,15 @@
             <p>Track/Sample <b>A</b> is <span id="input_synthetic_detail" style="font-weight: bold;">N/A</span> synthetic or electronic compared to <b>B</b>.</p>
           </div>
           <div class="row">
-          {% for letter in ['a', 'b'] %}
+            {% for letter in ['a', 'b'] %}
             <div class="col input-group">
               <input type="range" class="form-range" name="input_vocal_{{letter}}" id="input_vocal_{{letter}}" min="0" max="1" step="1">
               <p>Track/Sample <b>{{letter|upper}}</b> contains <span id="input_vocal_{{letter}}_detail" style="font-weight: bold;">...</span></p>
             </div>
-          {% endfor %}
+            {% endfor %}
           </div>
-          <div class="input-group" data-bs-theme="dark">
-            <input type="text" class="form-control" placeholder="Additional comments, notes, or other information?" aria-label="Comments" data-bs-theme="dark">
+          <div class="input-group">
+            <input type="text" name="comments" class="form-control" placeholder="Additional comments, notes, or other information?" aria-label="Comments">
             <!-- <button class="btn btn-outline-secondary" type="button">Button</button> -->
             <button type="submit" class="btn btn-primary">Submit Data</button>
             <button type="button" onclick="window.navigation.reload()" id="lspz-new" class="btn btn-outline-danger">New Comparison</button>
@@ -100,7 +98,7 @@
       </div>
     </div>
     <footer class="d-flex flex-wrap justify-content-between align-items-center py-0 my-1 border-top">
-      <p class="col-md-4 mb-0 text-muted">Interface © LSPZ Contributors</p>
+      <p class="col-md-4 mb-0 text-muted">Interface © LSPZ Contributors, no rights implied for audio samples.</p>
 
       <!-- <a href="/" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
         <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
