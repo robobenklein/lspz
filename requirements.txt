@@ -16,3 +16,4 @@ h5py
 mediafile
 tqdm
 python-magic
+bidict
