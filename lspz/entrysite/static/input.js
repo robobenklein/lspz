@@ -274,3 +274,9 @@ function lspz_load_samples() {
     player_b.load_track(trackid_b);
   });
 }
+
+function lspz_reset_page() {
+  // firefox would by default restore the form inputs, so clear them first:
+  jQuery("#lspz-data-submission")[0].reset();
+  window.location.reload();
+}
