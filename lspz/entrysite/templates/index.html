@@ -73,12 +73,12 @@
         <h3 class="text-center">Data Input</h3>
         <form action="/api/v1/data/submit-comparison" id="lspz-data-submission">
           <div class="input-group">
-            <label for="input_energy" class="form-label">Which sample has higher Intensity / Energy?</label>
+            <label for="input_energy" class="form-label" data-bs-toggle="popover" data-bs-title="Energy and Intensity" data-bs-content="Examples of high energy/intensity include Dubstep, Speedcore, Hard Rock or Metal, while lower intensity/energy genres include Ambient, Downtempo, and LoFi hip-hop." data-bs-placement="top" style="cursor: help;">Which sample has higher Intensity / Energy?</label>
             <input type="range" class="form-range" name="input_energy" id="input_energy" min="-1" max="1" step="0.1">
             <p>Track/Sample <b>A</b> is <span id="input_energy_detail" style="font-weight: bold;">N/A</span> intense and energetic compared to <b>B</b>.</p>
           </div>
           <div class="input-group">
-            <label for="input_synthetic" class="form-label">Which sample has more artificial, electronic, or computer-generated sounds?</label>
+            <label for="input_synthetic" class="form-label" data-bs-toggle="popover" data-bs-title="Synthetic vs Conventional" data-bs-content="Synthetic sounds include Chiptune, Synthesizers, computer-generated noise, and related, while conventional sounds are those produced by human-made instruments, like woodwind, strings, brass, keyboards, and percussion." data-bs-placement="top" style="cursor: help;">Which sample has more artificial, electronic, or computer-generated sounds?</label>
             <input type="range" class="form-range" name="input_synthetic" id="input_synthetic" min="-1" max="1" step="0.1">
             <p>Track/Sample <b>A</b> is <span id="input_synthetic_detail" style="font-weight: bold;">N/A</span> synthetic or electronic compared to <b>B</b>.</p>
           </div>
@@ -86,7 +86,7 @@
             {% for letter in ['a', 'b'] %}
             <div class="col input-group">
               <input type="range" class="form-range" name="input_vocal_{{letter}}" id="input_vocal_{{letter}}" min="0" max="1" step="1">
-              <p>Track/Sample <b>{{letter|upper}}</b> contains <span id="input_vocal_{{letter}}_detail" style="font-weight: bold;">...</span></p>
+              <p data-bs-toggle="tooltip", data-bs-title="If you don't want to evaluate vocalizations, you can safely leave these blank!">Track/Sample <b>{{letter|upper}}</b> contains <span id="input_vocal_{{letter}}_detail" style="font-weight: bold;">...</span></p>
             </div>
             {% endfor %}
           </div>
