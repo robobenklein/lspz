@@ -9,6 +9,8 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for,
     abort, send_file, jsonify, Response
 )
+from bidict import bidict
+import networkx as nx
 
 from .. import log
 # from .app import app
@@ -94,6 +96,46 @@ def random_track_id(num: int):
         [x.mbid for x in library.scan_library()],
         num
     )
+
+@bp.route("/random/connecting_v1")
+def get_connecting_tracks_v1():
+    submission_files = list(data_output_dir.glob("**/submissions.jsonl"))
+    def iterate_submissions():
+        for file in submission_files:
+            with file.open("rt") as f:
+                for line in f:
+                    yield json.loads(line)
+
+    G = nx.Graph()
+    for s in iterate_submissions():
+        id_a = s["a"]
+        id_b = s["b"]
+
+        G.add_edge(id_a, id_b)
+
+    comps = list(nx.connected_components(G))
+    if len(comps) == 1:
+        # choose a new track outside the component to compare with one in it
+        in_comp = set(G.nodes)
+        out_of_comp = set([x.mbid for x in library.scan_library()]) - in_comp
+        if len(out_of_comp) == 0:
+            # no uncompared tracks, choose some that are far apart
+            # or would have low comparison confidence:
+            start = random.choice(list(in_comp))
+            layers = list(nx.bfs_layers(G, start))
+            other = random.choice(layers[-1]) # get any node far away from start
+            return [start, other]
+        return [
+            random.choice(list(in_comp)),
+            random.choise(list(out_of_comp))
+        ]
+    else:
+        # choose two comps at random:
+        c1, c2 = random.sample(comps, 2)
+        return [
+            random.choice(list(c1)),
+            random.choice(list(c2))
+        ]
 
 @bp.route("/track/<mbid>/file", methods=['GET'])
 def get_track_by_mbid(mbid: str):

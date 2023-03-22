@@ -271,7 +271,8 @@ function lspz_load_samples() {
   player_a.mark_loading();
   player_b.mark_loading();
 
-  jQuery.get("/api/v1/random/tracks/2", (data) => {
+  // jQuery.get("/api/v1/random/tracks/2", (data) => {
+  jQuery.get("/api/v1/random/connecting_v1", (data) => {
     let trackid_a = data[0];
     let trackid_b = data[1];
 
